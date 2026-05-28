@@ -10,9 +10,11 @@
 /.idea
 /.nova
 /.phpunit.cache
+/.pest
 /.vscode
 /.zed
 /auth.json
+/database/*.sqlite
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json
@@ -20,6 +22,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/test-results
 /vendor
 _ide_helper.php
 Homestead.json

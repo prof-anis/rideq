@@ -1,57 +1,44 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class LoginTest extends TestCase
-{
-    use RefreshDatabase;
+it('redirects guests from the dashboard to the login screen', function () {
+    $this->get('/dashboard')
+        ->assertRedirect('/login');
+});
 
-    public function test_guests_are_redirected_to_the_login_screen(): void
-    {
-        $this->get('/dashboard')
-            ->assertRedirect('/login');
-    }
+it('renders the login screen', function () {
+    $this->get('/login')
+        ->assertOk();
+});
 
-    public function test_login_screen_is_displayed(): void
-    {
-        $this->get('/login')
-            ->assertOk();
-    }
+it('authenticates users with valid credentials', function () {
+    $user = User::factory()->create([
+        'email' => 'ops@rideq.test',
+        'password' => 'secret-password',
+    ]);
 
-    public function test_users_can_authenticate_with_valid_credentials(): void
-    {
-        $user = User::factory()->create([
-            'email' => 'ops@rideq.test',
-            'password' => 'secret-password',
-        ]);
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'secret-password',
+    ]);
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'secret-password',
-        ]);
+    $this->assertAuthenticatedAs($user);
+    $response->assertRedirect('/dashboard');
+});
 
-        $this->assertAuthenticatedAs($user);
-        $response->assertRedirect('/dashboard');
-    }
+it('rejects invalid credentials', function () {
+    $user = User::factory()->create([
+        'email' => 'ops@rideq.test',
+        'password' => 'secret-password',
+    ]);
 
-    public function test_users_cannot_authenticate_with_invalid_credentials(): void
-    {
-        $user = User::factory()->create([
-            'email' => 'ops@rideq.test',
-            'password' => 'secret-password',
-        ]);
+    $response = $this->from('/login')->post('/login', [
+        'email' => $user->email,
+        'password' => 'wrong-password',
+    ]);
 
-        $response = $this->from('/login')->post('/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
-
-        $this->assertGuest();
-        $response->assertRedirect('/login');
-        $response->assertSessionHasErrors('email');
-    }
-}
+    $this->assertGuest();
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors('email');
+});
